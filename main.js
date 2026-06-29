@@ -1531,26 +1531,47 @@ async function placeSketchesPhase() {
     setStatus("Importing this folder's sketches into a new bin...", "working");
     const rootItem = await project.getRootItem();
     const stamp = new Date().toISOString().slice(0, 16).replace("T", " ");
-    let bin = null;
-    try { bin = await rootItem.createBin("NB Sketches " + stamp); } catch (e) { bin = null; }
-    const paths = manifest.clips.map((c) => folderDir + "/" + c.sketchName);
-    let imported = false;
-    try {
-      if (typeof project.importFiles === "function") { await project.importFiles(paths, true, bin || undefined); imported = true; }
-    } catch (e) {}
-    if (!imported) {
-      try { if (ppro.ProjectUtils && typeof ppro.ProjectUtils.importFiles === "function") { await ppro.ProjectUtils.importFiles(project, paths); imported = true; } } catch (e) {}
-    }
-    if (!imported) throw new Error("This Premiere build wouldn't import the sketches.");
+    let bin = null, binErr = null;
+    try { bin = await rootItem.createBin("NB Sketches " + stamp); } catch (e) { binErr = e && (e.message || String(e)); bin = null; }
 
-    // name -> projectItem map, restricted to the new bin (fall back to project).
+    // Import per-file (robust to a missing/locked sketch), into the new bin when
+    // the build accepts a target-bin argument; otherwise fall back to root.
+    let importedCount = 0, lastImpErr = null;
+    for (const c of manifest.clips) {
+      const p = folderDir + "/" + c.sketchName;
+      let done = false;
+      if (bin) {
+        try { await project.importFiles([p], true, bin); done = true; }
+        catch (e) { lastImpErr = e && (e.message || String(e)); }
+      }
+      if (!done) {
+        try { await project.importFiles([p], true); done = true; }
+        catch (e) { lastImpErr = e && (e.message || String(e)); }
+      }
+      if (done) importedCount++;
+    }
+    if (importedCount === 0) {
+      throw new Error("Couldn't import any sketches" + (lastImpErr ? ": " + lastImpErr : "") +
+        (binErr ? " (bin error: " + binErr + ")" : "") + `. Check the sketches exist in ${folderDir}.`);
+    }
+
+    // name -> projectItem map, restricted to the new bin when available.
     let items = bin ? await getFolderItems(bin) : [];
-    if (!items || !items.length) items = await collectProjectItems(project);
+    const usingBin = !!(items && items.length);
+    if (!usingBin) items = await collectProjectItems(project);
     const byName = {};
+    const folderKey = normPath(folderDir);
     for (const pi of items) {
       try {
         const n = (typeof pi.getName === "function") ? await pi.getName() : pi.name;
-        if (n) byName[normName(n)] = pi;
+        if (!n) continue;
+        if (!usingBin) {
+          // Whole-project fallback: skip items whose media path is from a
+          // different folder so an old run (e.g. v05) can't shadow this one.
+          const mp = await getProjectItemMediaPath(pi);
+          if (mp && normPath(mp).indexOf(folderKey) === -1) continue;
+        }
+        byName[normName(n)] = pi;
       } catch (e) {}
     }
 
