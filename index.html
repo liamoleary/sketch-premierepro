@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: transparent;
+        --surface: #2b2b2b;
+        --surface-2: #333333;
+        --border: #3f3f3f;
+        --border-strong: #525252;
+        --text: #e8e8e8;
+        --text-dim: #a3a3a3;
+        --text-faint: #777777;
+        --accent: #5b8def;
+        --accent-2: #4a7be0;
+        --danger: #e15555;
+        --success: #5ac06d;
+      }
+      *, *::before, *::after { box-sizing: border-box; }
+      html, body { height: 100%; }
+      body {
+        margin: 0;
+        padding: 14px 14px 24px;
+        font-family: -apple-system, "Segoe UI", sans-serif;
+        font-size: 12px;
+        color: var(--text);
+        overflow-y: auto;
+      }
+      body::-webkit-scrollbar { width: 10px; }
+      body::-webkit-scrollbar-track { background: transparent; }
+      body::-webkit-scrollbar-thumb {
+        background: var(--border);
+        border-radius: 5px;
+        border: 2px solid transparent;
+        background-clip: content-box;
+      }
+
+      .field { margin-bottom: 14px; }
+      label.field-label {
+        display: block;
+        margin-bottom: 6px;
+        color: var(--text-dim);
+        font-weight: 600;
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+      }
+
+      /* Dropdown */
+      select.picker, input.text-input {
+        width: 100%;
+        background: var(--surface);
+        color: var(--text);
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        padding: 8px 10px;
+        font-size: 12px;
+        font-family: inherit;
+        outline: none;
+      }
+      select.picker {
+        cursor: pointer;
+        padding-right: 30px;
+        appearance: none;
+        -webkit-appearance: none;
+        background-image: linear-gradient(45deg, transparent 50%, var(--text-dim) 50%),
+                          linear-gradient(135deg, var(--text-dim) 50%, transparent 50%);
+        background-position: calc(100% - 14px) 52%, calc(100% - 9px) 52%;
+        background-size: 5px 5px, 5px 5px;
+        background-repeat: no-repeat;
+      }
+      select.picker:focus, input.text-input:focus { border-color: var(--accent); }
+
+      /* Segmented mode */
+      .segmented {
+        display: flex;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        padding: 3px;
+        gap: 2px;
+      }
+      .seg-btn {
+        flex: 1;
+        background: transparent;
+        color: var(--text-dim);
+        border: 0;
+        padding: 6px 8px;
+        font-size: 11px;
+        font-family: inherit;
+        font-weight: 600;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+      .seg-btn:hover { color: var(--text); }
+      .seg-btn.active { background: var(--accent); color: white; }
+
+      /* Checkbox */
+      .checkbox-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 10px;
+        font-size: 12px;
+        color: var(--text);
+        cursor: pointer;
+        user-select: none;
+      }
+      .checkbox-row input[type=checkbox] {
+        appearance: none;
+        -webkit-appearance: none;
+        width: 16px; height: 16px;
+        background: var(--surface);
+        border: 1px solid var(--border-strong);
+        border-radius: 4px;
+        cursor: pointer;
+        position: relative;
+        flex: 0 0 auto;
+      }
+      .checkbox-row input[type=checkbox]:checked {
+        background: var(--accent);
+        border-color: var(--accent);
+      }
+      .checkbox-row input[type=checkbox]:checked::after {
+        content: "";
+        position: absolute;
+        left: 4px; top: 0px;
+        width: 5px; height: 10px;
+        border: solid white;
+        border-width: 0 2px 2px 0;
+        transform: rotate(45deg);
+      }
+
+      .cta {
+        display: block;
+        width: 100%;
+        background: var(--accent);
+        color: white;
+        border: 0;
+        border-radius: 6px;
+        padding: 10px 12px;
+        font-size: 13px;
+        font-weight: 700;
+        font-family: inherit;
+        cursor: pointer;
+      }
+      .cta:hover { background: var(--accent-2); }
+      .cta:disabled { background: #444; color: #888; cursor: not-allowed; }
+
+      .ghost-btn {
+        background: transparent;
+        color: var(--text-dim);
+        border: 0;
+        padding: 4px 6px;
+        font-size: 11px;
+        font-family: inherit;
+        font-weight: 600;
+        cursor: pointer;
+        border-radius: 4px;
+      }
+      .ghost-btn:hover { color: var(--accent); background: rgba(91, 141, 239, 0.08); }
+
+      .row { display: flex; gap: 8px; align-items: center; }
+      .row > .grow { flex: 1; }
+
+      #status {
+        margin-top: 12px;
+        padding: 9px 10px;
+        border-radius: 6px;
+        background: var(--surface);
+        color: var(--text-dim);
+        font-size: 11px;
+        line-height: 1.4;
+        min-height: 16px;
+        white-space: pre-wrap;
+        word-break: break-word;
+        border: 1px solid var(--border);
+      }
+      #status.error   { background: #3a1d1d; color: #ffb4b4; border-color: #5a2c2c; }
+      #status.success { background: #1d3a23; color: #b6f0b6; border-color: #2c5a35; }
+      #status.working { background: #1f2a44; color: #bcd0ff; border-color: #2c3a5e; }
+
+      .divider { height: 1px; background: var(--border); margin: 16px 0 12px; border: 0; }
+      details summary {
+        cursor: pointer;
+        color: var(--text-dim);
+        font-weight: 600;
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+        outline: none;
+        padding: 4px 0;
+        list-style: none;
+      }
+      details summary::-webkit-details-marker { display: none; }
+      details summary::before {
+        content: "▸";
+        display: inline-block;
+        margin-right: 6px;
+        transition: transform 120ms ease;
+        color: var(--text-faint);
+      }
+      details[open] summary::before { transform: rotate(90deg); }
+
+      .key-row { display: flex; gap: 6px; align-items: stretch; margin-top: 8px; }
+      .key-row sp-textfield { flex: 1; }
+      .saved-pill { font-size: 10px; color: var(--success); margin-left: 6px; font-weight: 700; }
+
+      /* Progress list */
+      .progress-box {
+        margin-top: 10px;
+        padding: 8px 10px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 6px;
+      }
+      .progress-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        color: var(--text-dim);
+        font-size: 10px;
+        text-transform: uppercase;
+        font-weight: 600;
+        letter-spacing: 0.4px;
+        margin-bottom: 6px;
+      }
+      .progress-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 3px 0;
+        font-size: 11px;
+      }
+      .progress-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        flex: 0 0 auto;
+        background: var(--text-faint);
+      }
+      .progress-row[data-state="running"] .progress-dot {
+        background: var(--accent);
+        animation: pulse 1.2s infinite;
+      }
+      .progress-row[data-state="done"] .progress-dot { background: var(--success); }
+      .progress-row[data-state="error"] .progress-dot { background: var(--danger); }
+      @keyframes pulse {
+        0%, 100% { opacity: 1; transform: scale(1); }
+        50%      { opacity: 0.4; transform: scale(1.3); }
+      }
+      .progress-label { flex: 1; color: var(--text); }
+      .progress-meta  { color: var(--text-faint); font-size: 10px; }
+
+      .placeholder-hint {
+        color: var(--text-faint);
+        font-size: 11px;
+        margin-top: 4px;
+        line-height: 1.4;
+      }
+
+      .interval-row { display: flex; gap: 6px; align-items: center; }
+      .interval-row .text-input { width: 80px; flex: 0 0 80px; }
+      .interval-row .placeholder-hint { margin-top: 0; flex: 1; }
+
+      .folder-row { display: flex; gap: 6px; align-items: stretch; }
+      .folder-row .text-input { flex: 1; cursor: default; color: var(--text-dim); }
+      .folder-row .ghost-btn { white-space: nowrap; }
+    </style>
+  </head>
+  <body>
+
+    <!-- CAPTURE MODE -->
+    <div class="field">
+      <label class="field-label">Source</label>
+      <div class="segmented" id="captureMode">
+        <button type="button" class="seg-btn active" data-value="v1clips">Match V1 clips → V2</button>
+        <button type="button" class="seg-btn" data-value="markers">Markers</button>
+        <button type="button" class="seg-btn" data-value="interval">Every N sec</button>
+      </div>
+      <p class="placeholder-hint" id="modeHint">Sketches the middle frame of every clip on the V1 video track and lays each result on V2, trimmed to match the clip below it.</p>
+    </div>
+
+    <!-- INTERVAL INPUT -->
+    <div class="field" id="intervalField" style="display:none;">
+      <label class="field-label" for="intervalSeconds">Interval (seconds)</label>
+      <div class="interval-row">
+        <input type="number" class="text-input" id="intervalSeconds" min="0.1" max="3600" step="0.5" value="5" />
+        <span class="placeholder-hint">One frame is captured every N seconds across the sequence's in/out range (or the whole sequence if no in/out is set).</span>
+      </div>
+    </div>
+
+    <!-- MODEL -->
+    <div class="field">
+      <label class="field-label" for="modelChoice">Model</label>
+      <select id="modelChoice" class="picker">
+        <option value="nb2">Nano Banana 2 — faster</option>
+        <option value="pro">Nano Banana Pro — higher quality</option>
+      </select>
+    </div>
+
+    <!-- OUTPUT FOLDER -->
+    <div class="field">
+      <label class="field-label">Output folder</label>
+      <div class="folder-row">
+        <input type="text" class="text-input" id="outputFolderLabel" readonly placeholder="No folder selected — click Choose" />
+        <button id="chooseFolderBtn" class="ghost-btn" type="button">Choose…</button>
+      </div>
+      <p class="placeholder-hint">Sketched stills are written here, then imported and placed on V2. In markers/interval mode the contact sheet is saved here too.</p>
+    </div>
+
+    <!-- OPTIONS: V1->V2 mode -->
+    <div id="v1Options">
+      <label class="checkbox-row">
+        <input type="checkbox" id="overwriteV2" />
+        <span>Overwrite anything already on V2 in those ranges</span>
+      </label>
+      <button id="btnOneClick" class="cta" type="button">Sketch V1 clips &rarr; V2</button>
+      <p class="placeholder-hint">One click: export each V1 frame, sketch it with Nano Banana, and place it on V2 matched to timing. Watch Progress below for per-clip status.</p>
+      <details style="margin-top:10px;">
+        <summary>Two-step fallback</summary>
+        <p class="placeholder-hint" id="phaseHint">Use these only if one-click can't read exported frames on your build. Step 1 exports frames + a manifest; run <code>node sketch_frames.js "&lt;folder&gt;"</code> in a terminal; then click Step 2.</p>
+        <button id="btnExport" class="cta" type="button" style="margin-bottom:8px;">1 &middot; Export frames + manifest</button>
+        <button id="btnPlace" class="cta" type="button">2 &middot; Place sketches on V2</button>
+      </details>
+    </div>
+
+    <!-- OPTIONS: markers / interval mode -->
+    <div id="captureOptions" style="display:none;">
+      <label class="checkbox-row">
+        <input type="checkbox" id="importToBin" checked />
+        <span>Import generated frames into a new bin in the project</span>
+      </label>
+      <label class="checkbox-row">
+        <input type="checkbox" id="buildContactSheet" checked />
+        <span>Build a multi-panel contact sheet PNG</span>
+      </label>
+    </div>
+
+    <!-- GO -->
+    <button id="goBtn" class="cta" type="button">Sketch V1 clips onto V2</button>
+
+    <div id="status">Ready. Open the nested sequence with your hold-frame clips on V1.</div>
+
+    <div id="progressBox" class="progress-box" style="display:none;">
+      <div class="progress-header">
+        <span>Progress</span>
+        <button id="cancelBtn" class="ghost-btn" type="button" style="font-size:10px; padding:2px 6px;">Cancel</button>
+      </div>
+      <div id="progressList"></div>
+    </div>
+
+    <hr class="divider" />
+
+    <details id="settings">
+      <summary>Settings <span id="keyStatePill" class="saved-pill"></span></summary>
+      <div style="padding: 4px 0 8px;">
+        <label class="field-label" for="apiKey">Google Gemini API key</label>
+        <div class="key-row">
+          <sp-textfield id="apiKey" type="password" placeholder="AIza..."></sp-textfield>
+          <sp-button id="saveKey" variant="secondary" quiet>Save</sp-button>
+        </div>
+      </div>
+    </details>
+
+    <script src="main.js"></script>
+  </body>
+</html>

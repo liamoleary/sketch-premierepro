@@ -1,0 +1,4 @@
+# Rename this file to: apikey.txt
+# Put your Google Gemini API key on its own line below (starts with AIza...).
+# Lines starting with # are ignored.
+AIzaYOUR_KEY_HERE

@@ -1,0 +1,10 @@
+# Local secrets — never commit
+apikey.txt
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# Python cache
+__pycache__/
+*.pyc
